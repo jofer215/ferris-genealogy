@@ -217,14 +217,20 @@
         const searchResults = document.getElementById('searchResults');
         
         // Load data
-        fetch('data.json')
-            .then(response => response.json())
+        fetch('./data.json')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`Failed to load data.json (${response.status})`);
+                }
+                return response.json();
+            })
             .then(data => {
                 genealogyData = data;
                 initializeApp();
             })
             .catch(error => {
-                app.innerHTML = '<div class="person-card"><h2>Error loading data</h2><p>' + error.message + '</p></div>';
+                console.error('Error loading data:', error);
+                app.innerHTML = '<div class="person-card"><h2>Error loading data</h2><p>' + error.message + '</p><p>Make sure data.json is uploaded to your repository.</p></div>';
             });
         
         function initializeApp() {
