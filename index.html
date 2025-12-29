@@ -6,185 +6,58 @@
     <title>Ferris Family Genealogy</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        
-        body {
-            font-family: Georgia, serif;
-            line-height: 1.6;
-            color: #333;
-            background: #f5f5f5;
+        body { font-family: Georgia, serif; line-height: 1.6; color: #333; background: #f5f5f5; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+        header { background: #2c3e50; color: white; padding: 20px; margin-bottom: 30px; }
+        header h1 { font-size: 28px; font-weight: normal; margin-bottom: 5px; }
+        header p { font-size: 14px; color: #ecf0f1; }
+        header a { color: #3498db; text-decoration: none; }
+        header a:hover { text-decoration: underline; }
+        .loading { text-align: center; padding: 50px; font-size: 18px; color: #7f8c8d; }
+        .loading-spinner {
+            display: inline-block; width: 50px; height: 50px;
+            border: 5px solid #ecf0f1; border-top: 5px solid #3498db;
+            border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 20px;
         }
-        
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-        
-        header {
-            background: #2c3e50;
-            color: white;
-            padding: 20px;
-            margin-bottom: 30px;
-        }
-        
-        header h1 {
-            font-size: 28px;
-            font-weight: normal;
-            margin-bottom: 5px;
-        }
-        
-        header p {
-            font-size: 14px;
-            color: #ecf0f1;
-        }
-        
-        header a {
-            color: #3498db;
-            text-decoration: none;
-        }
-        
-        header a:hover {
-            text-decoration: underline;
-        }
-        
-        .loading {
-            text-align: center;
-            padding: 50px;
-            font-size: 18px;
-            color: #7f8c8d;
-        }
-        
-        .breadcrumb {
-            background: white;
-            padding: 15px;
-            margin-bottom: 20px;
-            border-left: 4px solid #3498db;
-        }
-        
-        .breadcrumb a {
-            color: #3498db;
-            text-decoration: none;
-            margin-right: 5px;
-            cursor: pointer;
-        }
-        
-        .breadcrumb a:hover {
-            text-decoration: underline;
-        }
-        
-        .person-card {
-            background: white;
-            padding: 25px;
-            margin-bottom: 30px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-        
-        .person-header {
-            border-bottom: 2px solid #ecf0f1;
-            padding-bottom: 15px;
-            margin-bottom: 20px;
-        }
-        
-        .person-header h2 {
-            font-size: 24px;
-            color: #2c3e50;
-            margin-bottom: 5px;
-        }
-        
-        .person-id {
-            color: #7f8c8d;
-            font-size: 14px;
-        }
-        
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .breadcrumb { background: white; padding: 15px; margin-bottom: 20px; border-left: 4px solid #3498db; }
+        .breadcrumb a { color: #3498db; text-decoration: none; margin-right: 5px; cursor: pointer; }
+        .breadcrumb a:hover { text-decoration: underline; }
+        .person-card { background: white; padding: 25px; margin-bottom: 30px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .person-header { border-bottom: 2px solid #ecf0f1; padding-bottom: 15px; margin-bottom: 20px; }
+        .person-header h2 { font-size: 24px; color: #2c3e50; margin-bottom: 5px; }
+        .person-id { color: #7f8c8d; font-size: 14px; }
         .person-text {
-            white-space: pre-wrap;
-            font-family: 'Courier New', monospace;
-            font-size: 13px;
-            line-height: 1.8;
-            background: #f8f9fa;
-            padding: 15px;
-            border-radius: 4px;
-            margin-bottom: 20px;
+            white-space: pre-wrap; font-family: 'Courier New', monospace;
+            font-size: 13px; line-height: 1.8; background: #f8f9fa;
+            padding: 15px; border-radius: 4px; margin-bottom: 20px;
         }
-        
-        .children {
-            margin-top: 25px;
-        }
-        
+        .children { margin-top: 25px; }
         .children h3 {
-            font-size: 18px;
-            color: #2c3e50;
-            margin-bottom: 15px;
-            border-bottom: 1px solid #ecf0f1;
-            padding-bottom: 8px;
+            font-size: 18px; color: #2c3e50; margin-bottom: 15px;
+            border-bottom: 1px solid #ecf0f1; padding-bottom: 8px;
         }
-        
-        .child-list {
-            list-style: none;
-        }
-        
+        .child-list { list-style: none; }
         .child-list li {
-            padding: 10px 15px;
-            margin-bottom: 8px;
-            background: #f8f9fa;
-            border-left: 3px solid #3498db;
-            transition: all 0.2s;
-            cursor: pointer;
+            padding: 10px 15px; margin-bottom: 8px; background: #f8f9fa;
+            border-left: 3px solid #3498db; transition: all 0.2s; cursor: pointer;
         }
-        
-        .child-list li:hover {
-            background: #e8f4f8;
-            border-left-width: 5px;
-        }
-        
-        .child-id {
-            color: #7f8c8d;
-            font-size: 12px;
-            margin-left: 10px;
-        }
-        
-        .no-children {
-            color: #7f8c8d;
-            font-style: italic;
-        }
-        
+        .child-list li:hover { background: #e8f4f8; border-left-width: 5px; }
+        .child-id { color: #7f8c8d; font-size: 12px; margin-left: 10px; }
+        .no-children { color: #7f8c8d; font-style: italic; }
         .back-link {
-            display: inline-block;
-            margin-bottom: 15px;
-            color: #3498db;
-            text-decoration: none;
-            cursor: pointer;
+            display: inline-block; margin-bottom: 15px;
+            color: #3498db; text-decoration: none; cursor: pointer;
         }
-        
-        .back-link:hover {
-            text-decoration: underline;
-        }
-        
-        .search-box {
-            background: white;
-            padding: 20px;
-            margin-bottom: 20px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-        
+        .back-link:hover { text-decoration: underline; }
+        .search-box { background: white; padding: 15px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
         .search-box input {
-            width: 100%;
-            padding: 12px;
-            font-size: 16px;
-            border: 2px solid #ecf0f1;
-            border-radius: 4px;
+            width: 100%; padding: 10px; font-size: 15px;
+            border: 2px solid #ecf0f1; border-radius: 4px;
         }
-        
-        .search-box input:focus {
-            outline: none;
-            border-color: #3498db;
-        }
-        
-        .search-results {
-            max-height: 400px;
-            overflow-y: auto;
-            margin-top: 10px;
-        }
+        .search-box input:focus { outline: none; border-color: #3498db; }
+        .search-results { max-height: 300px; overflow-y: auto; margin-top: 10px; display: none; }
+        .search-results.active { display: block; }
     </style>
 </head>
 <body>
@@ -201,103 +74,113 @@
             <div id="searchResults" class="search-results"></div>
         </div>
         <div id="app">
-            <div class="loading">Loading genealogy data...</div>
+            <div class="loading">
+                <div class="loading-spinner"></div>
+                <div>Loading genealogy data...</div>
+                <div style="font-size: 14px; color: #95a5a6; margin-top: 10px;">Please wait 10-30 seconds</div>
+            </div>
         </div>
     </div>
     
     <script>
-        let genealogyData = null;
-        const app = document.getElementById('app');
-        const searchInput = document.getElementById('searchInput');
-        const searchResults = document.getElementById('searchResults');
+        var genealogyData = null;
+        var app = document.getElementById('app');
+        var searchInput = document.getElementById('searchInput');
+        var searchResults = document.getElementById('searchResults');
         
         // Load data
-        fetch('data.json')
-            .then(response => response.json())
-            .then(data => {
+        fetch('./data.json')
+            .then(function(response) {
+                if (!response.ok) throw new Error('Failed to load');
+                return response.json();
+            })
+            .then(function(data) {
                 genealogyData = data;
                 initializeApp();
             })
-            .catch(error => {
-                app.innerHTML = '<div class="person-card"><h2>Error loading data</h2><p>' + error.message + '</p></div>';
+            .catch(function(error) {
+                app.innerHTML = '<div class="person-card"><h2>Error</h2><p>' + error.message + '</p></div>';
             });
         
         function initializeApp() {
-            // Handle hash navigation
             window.addEventListener('hashchange', render);
             
-            // Setup search
-            let searchTimeout;
-            searchInput.addEventListener('input', (e) => {
+            var searchTimeout;
+            searchInput.addEventListener('input', function(e) {
                 clearTimeout(searchTimeout);
-                searchTimeout = setTimeout(() => performSearch(e.target.value), 300);
+                searchTimeout = setTimeout(function() {
+                    performSearch(e.target.value);
+                }, 300);
             });
             
-            // Initial render
             render();
         }
         
         function performSearch(query) {
             if (!query || query.length < 2) {
+                searchResults.classList.remove('active');
                 searchResults.innerHTML = '';
                 return;
             }
             
-            const results = [];
-            const lowerQuery = query.toLowerCase();
+            var results = [];
+            var lowerQuery = query.toLowerCase();
             
-            for (const [id, person] of Object.entries(genealogyData)) {
-                if (person.name.toLowerCase().includes(lowerQuery)) {
-                    results.push(person);
-                    if (results.length >= 50) break; // Limit results
+            for (var id in genealogyData) {
+                if (genealogyData[id].name.toLowerCase().indexOf(lowerQuery) !== -1) {
+                    results.push(genealogyData[id]);
+                    if (results.length >= 50) break;
                 }
             }
             
+            searchResults.classList.add('active');
+            
             if (results.length === 0) {
-                searchResults.innerHTML = '<div class="no-children" style="padding: 10px;">No results found</div>';
+                searchResults.innerHTML = '<div class="no-children" style="padding: 10px;">No results</div>';
             } else {
-                let html = '<ul class="child-list">';
-                results.forEach(person => {
-                    html += `
-                        <li onclick="goToPerson('${person.id}')">
-                            ${escapeHtml(person.name)}
-                            <span class="child-id">${person.id}</span>
-                        </li>
-                    `;
-                });
+                var html = '<ul class="child-list">';
+                for (var i = 0; i < results.length; i++) {
+                    var person = results[i];
+                    html += '<li onclick="goToPerson(&quot;' + person.id + '&quot;)">';
+                    html += escapeHtml(person.name);
+                    html += '<span class="child-id">' + person.id + '</span>';
+                    html += '</li>';
+                }
                 html += '</ul>';
                 searchResults.innerHTML = html;
             }
         }
         
         function getCurrentPersonId() {
-            const hash = window.location.hash;
+            var hash = window.location.hash;
             return hash ? hash.substring(1) : null;
         }
         
         function goToPerson(id) {
             searchInput.value = '';
+            searchResults.classList.remove('active');
             searchResults.innerHTML = '';
             window.location.hash = id;
         }
         
         function buildBreadcrumb(id) {
-            if (!id) return '<div class="breadcrumb"><a onclick="goToPerson('')">Root</a></div>';
-            
-            const parts = id.split('.');
-            let breadcrumbs = ['<a onclick="goToPerson('')">Root</a>'];
-            
-            for (let i = 0; i < parts.length; i++) {
-                const partId = parts.slice(0, i + 1).join('.');
-                breadcrumbs.push(`<a onclick="goToPerson('${partId}')">${partId}</a>`);
+            if (!id) {
+                return '<div class="breadcrumb"><a onclick="goToPerson(&quot;&quot;)">Root</a></div>';
             }
             
-            return `<div class="breadcrumb">${breadcrumbs.join(' › ')}</div>`;
+            var parts = id.split('.');
+            var breadcrumbs = ['<a onclick="goToPerson(&quot;&quot;)">Root</a>'];
+            
+            for (var i = 0; i < parts.length; i++) {
+                var partId = parts.slice(0, i + 1).join('.');
+                breadcrumbs.push('<a onclick="goToPerson(&quot;' + partId + '&quot;)">' + partId + '</a>');
+            }
+            
+            return '<div class="breadcrumb">' + breadcrumbs.join(' › ') + '</div>';
         }
         
         function render() {
-            const personId = getCurrentPersonId();
-            
+            var personId = getCurrentPersonId();
             if (!personId) {
                 renderRoot();
             } else {
@@ -306,95 +189,81 @@
         }
         
         function renderRoot() {
-            const rootChildren = ['1', '2', '3', '4', '5']
-                .map(id => genealogyData[id])
-                .filter(p => p);
+            var rootIds = ['1', '2', '3', '4', '5'];
+            var rootChildren = [];
+            for (var i = 0; i < rootIds.length; i++) {
+                if (genealogyData[rootIds[i]]) {
+                    rootChildren.push(genealogyData[rootIds[i]]);
+                }
+            }
             
-            let html = buildBreadcrumb(null);
-            html += `
-                <div class="person-card">
-                    <div class="person-header">
-                        <h2>Jeffrey Ferris</h2>
-                        <div class="person-id">Patriarch (c.1610-1666)</div>
-                    </div>
-                    <div class="children">
-                        <h3>Children (${rootChildren.length})</h3>
-                        <ul class="child-list">
-            `;
+            var html = buildBreadcrumb(null);
+            html += '<div class="person-card">';
+            html += '<div class="person-header">';
+            html += '<h2>Jeffrey Ferris</h2>';
+            html += '<div class="person-id">Patriarch (c.1610-1666)</div>';
+            html += '</div>';
+            html += '<div class="children">';
+            html += '<h3>Children (' + rootChildren.length + ')</h3>';
+            html += '<ul class="child-list">';
             
-            rootChildren.forEach(child => {
-                html += `
-                    <li onclick="goToPerson('${child.id}')">
-                        ${escapeHtml(child.name)}
-                        <span class="child-id">${child.id}</span>
-                    </li>
-                `;
-            });
+            for (var i = 0; i < rootChildren.length; i++) {
+                var child = rootChildren[i];
+                html += '<li onclick="goToPerson(&quot;' + child.id + '&quot;)">';
+                html += escapeHtml(child.name);
+                html += '<span class="child-id">' + child.id + '</span>';
+                html += '</li>';
+            }
             
-            html += `
-                        </ul>
-                    </div>
-                </div>
-            `;
-            
+            html += '</ul></div></div>';
             app.innerHTML = html;
         }
         
         function renderPerson(personId) {
-            const person = genealogyData[personId];
+            var person = genealogyData[personId];
             
             if (!person) {
                 app.innerHTML = '<div class="person-card"><h2>Person not found</h2></div>';
                 return;
             }
             
-            let html = buildBreadcrumb(personId);
+            var html = buildBreadcrumb(personId);
             
             if (person.parent_id) {
-                html += `<a class="back-link" onclick="goToPerson('${person.parent_id}')">← Back to ${person.parent_id}</a>`;
+                html += '<a class="back-link" onclick="goToPerson(&quot;' + person.parent_id + '&quot;)">← Back to ' + person.parent_id + '</a>';
             } else {
-                html += `<a class="back-link" onclick="goToPerson('')">← Back to Root</a>`;
+                html += '<a class="back-link" onclick="goToPerson(&quot;&quot;)">← Back to Root</a>';
             }
             
-            html += `
-                <div class="person-card">
-                    <div class="person-header">
-                        <h2>${escapeHtml(person.name)}</h2>
-                        <div class="person-id">
-                            ID: ${person.id}
-                            ${person.secondary_id ? ' | ' + escapeHtml(person.secondary_id) : ''}
-                            | Source: ${person.source_file}
-                        </div>
-                    </div>
-                    <div class="person-text">${escapeHtml(person.text)}</div>
-            `;
+            html += '<div class="person-card">';
+            html += '<div class="person-header">';
+            html += '<h2>' + escapeHtml(person.name) + '</h2>';
+            html += '<div class="person-id">ID: ' + person.id;
+            if (person.secondary_id) {
+                html += ' | ' + escapeHtml(person.secondary_id);
+            }
+            html += ' | Source: ' + person.source_file;
+            html += '</div></div>';
+            html += '<div class="person-text">' + escapeHtml(person.text) + '</div>';
             
             if (person.children && person.children.length > 0) {
-                html += `
-                    <div class="children">
-                        <h3>Children (${person.children.length})</h3>
-                        <ul class="child-list">
-                `;
+                html += '<div class="children">';
+                html += '<h3>Children (' + person.children.length + ')</h3>';
+                html += '<ul class="child-list">';
                 
-                person.children.forEach(child => {
-                    html += `
-                        <li onclick="goToPerson('${child.id}')">
-                            ${escapeHtml(child.name)}
-                            <span class="child-id">${child.id}</span>
-                        </li>
-                    `;
-                });
+                for (var i = 0; i < person.children.length; i++) {
+                    var child = person.children[i];
+                    html += '<li onclick="goToPerson(&quot;' + child.id + '&quot;)">';
+                    html += escapeHtml(child.name);
+                    html += '<span class="child-id">' + child.id + '</span>';
+                    html += '</li>';
+                }
                 
-                html += `
-                        </ul>
-                    </div>
-                `;
+                html += '</ul></div>';
             } else {
-                html += `
-                    <div class="children">
-                        <p class="no-children">No children recorded</p>
-                    </div>
-                `;
+                html += '<div class="children">';
+                html += '<p class="no-children">No children recorded</p>';
+                html += '</div>';
             }
             
             html += '</div>';
@@ -403,7 +272,7 @@
         
         function escapeHtml(text) {
             if (!text) return '';
-            const div = document.createElement('div');
+            var div = document.createElement('div');
             div.textContent = text;
             return div.innerHTML;
         }
