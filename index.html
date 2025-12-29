@@ -247,29 +247,65 @@
         const searchInput = document.getElementById('searchInput');
         const searchResults = document.getElementById('searchResults');
         
-        // Load data (try gzipped version first for faster loading)
+        // Load data with progress tracking
         const dataUrl = './data.json.gz';
         
         app.innerHTML = `
             <div class="loading">
                 <div class="loading-spinner"></div>
                 <div class="loading-text">Loading genealogy data...</div>
-                <div class="loading-subtext">Downloading 56,211 people (this may take 5-10 seconds)</div>
+                <div class="loading-subtext" id="loadingProgress">Preparing download...</div>
             </div>
         `;
+        
+        const progressDiv = document.getElementById('loadingProgress');
         
         fetch(dataUrl)
             .then(response => {
                 if (!response.ok) {
                     // Fallback to uncompressed if .gz not found
+                    progressDiv.textContent = 'Trying uncompressed file...';
                     return fetch('./data.json');
                 }
-                return response;
+                
+                const contentLength = response.headers.get('content-length');
+                if (!contentLength) {
+                    progressDiv.textContent = 'Downloading...';
+                    return response;
+                }
+                
+                const total = parseInt(contentLength, 10);
+                let loaded = 0;
+                
+                const reader = response.body.getReader();
+                const stream = new ReadableStream({
+                    start(controller) {
+                        function push() {
+                            reader.read().then(({ done, value }) => {
+                                if (done) {
+                                    controller.close();
+                                    return;
+                                }
+                                loaded += value.byteLength;
+                                const percent = Math.round((loaded / total) * 100);
+                                const mb = (loaded / 1024 / 1024).toFixed(1);
+                                const totalMb = (total / 1024 / 1024).toFixed(1);
+                                progressDiv.textContent = `Downloaded ${mb}MB of ${totalMb}MB (${percent}%)`;
+                                controller.enqueue(value);
+                                push();
+                            });
+                        }
+                        push();
+                    }
+                });
+                
+                return new Response(stream);
             })
             .then(response => {
                 if (!response.ok) {
                     throw new Error(`Failed to load data (${response.status})`);
                 }
+                progressDiv.textContent = 'Processing data...';
                 return response.json();
             })
             .then(data => {
@@ -278,7 +314,19 @@
             })
             .catch(error => {
                 console.error('Error loading data:', error);
-                app.innerHTML = '<div class="person-card"><h2>Error loading data</h2><p>' + error.message + '</p><p>Make sure data.json or data.json.gz is uploaded to your repository. The file is large and may take 5-30 seconds to load depending on connection speed.</p></div>';
+                app.innerHTML = `
+                    <div class="person-card">
+                        <h2>Error loading data</h2>
+                        <p><strong>Error:</strong> ${error.message}</p>
+                        <p>Please check:</p>
+                        <ul style="margin-left: 20px; margin-top: 10px;">
+                            <li>Is data.json.gz or data.json uploaded to your repository?</li>
+                            <li>Open browser console (F12) for detailed error information</li>
+                            <li>Try clearing your browser cache and reloading</li>
+                        </ul>
+                        <p style="margin-top: 10px;"><a href="https://github.com/jofer215/ferris-genealogy">View repository</a></p>
+                    </div>
+                `;
             });
         
         function initializeApp() {
