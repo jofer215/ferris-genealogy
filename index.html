@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ferris Genealogy Browser</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        
+        body {
+            font-family: Georgia, serif;
+            line-height: 1.6;
+            color: #333;
+            background: #f5f5f5;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            background: #2c3e50;
+            color: white;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+        
+        header h1 {
+            font-size: 28px;
+            font-weight: normal;
+        }
+        
+        .breadcrumb {
+            background: white;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-left: 4px solid #3498db;
+        }
+        
+        .breadcrumb a {
+            color: #3498db;
+            text-decoration: none;
+            margin-right: 5px;
+        }
+        
+        .breadcrumb a:hover {
+            text-decoration: underline;
+        }
+        
+        .person-card {
+            background: white;
+            padding: 25px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .person-header {
+            border-bottom: 2px solid #ecf0f1;
+            padding-bottom: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .person-header h2 {
+            font-size: 24px;
+            color: #2c3e50;
+            margin-bottom: 5px;
+        }
+        
+        .person-id {
+            color: #7f8c8d;
+            font-size: 14px;
+        }
+        
+        .person-text {
+            white-space: pre-wrap;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            line-height: 1.8;
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+        
+        .children {
+            margin-top: 25px;
+        }
+        
+        .children h3 {
+            font-size: 18px;
+            color: #2c3e50;
+            margin-bottom: 15px;
+            border-bottom: 1px solid #ecf0f1;
+            padding-bottom: 8px;
+        }
+        
+        .child-list {
+            list-style: none;
+        }
+        
+        .child-list li {
+            padding: 10px 15px;
+            margin-bottom: 8px;
+            background: #f8f9fa;
+            border-left: 3px solid #3498db;
+            transition: all 0.2s;
+        }
+        
+        .child-list li:hover {
+            background: #e8f4f8;
+            border-left-width: 5px;
+        }
+        
+        .child-list a {
+            text-decoration: none;
+            color: #2c3e50;
+            display: block;
+        }
+        
+        .child-id {
+            color: #7f8c8d;
+            font-size: 12px;
+            margin-left: 10px;
+        }
+        
+        .search-box {
+            background: white;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .search-box input {
+            width: 100%;
+            padding: 12px;
+            font-size: 16px;
+            border: 2px solid #ecf0f1;
+            border-radius: 4px;
+        }
+        
+        .search-box input:focus {
+            outline: none;
+            border-color: #3498db;
+        }
+        
+        .no-children {
+            color: #7f8c8d;
+            font-style: italic;
+        }
+        
+        .back-link {
+            display: inline-block;
+            margin-bottom: 15px;
+            color: #3498db;
+            text-decoration: none;
+        }
+        
+        .back-link:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>Ferris Family Genealogy</h1>
+            <p>Research compiled by James G. Ferris</p>
+        </div>
+    </header>
+    
+    <div class="container">
+        <div id="app"></div>
+    </div>
+    
+    <script>
+        const API_URL = '/api';
+        const app = document.getElementById('app');
+        
+        // Get person ID from URL hash
+        function getCurrentPersonId() {
+            const hash = window.location.hash;
+            return hash ? hash.substring(1) : null;
+        }
+        
+        // Navigate to person
+        function goToPerson(id) {
+            window.location.hash = id;
+        }
+        
+        // Fetch person data
+        async function fetchPerson(id) {
+            const response = await fetch(`${API_URL}/person/${id}`);
+            return response.json();
+        }
+        
+        // Fetch children
+        async function fetchChildren(id) {
+            const response = await fetch(`${API_URL}/children/${id}`);
+            return response.json();
+        }
+        
+        // Build breadcrumb trail
+        function buildBreadcrumb(id) {
+            if (!id) return '';
+            
+            const parts = id.split('.');
+            let breadcrumbs = ['<a href="#">Root</a>'];
+            
+            for (let i = 0; i < parts.length; i++) {
+                const partId = parts.slice(0, i + 1).join('.');
+                breadcrumbs.push(`<a href="#${partId}">${partId}</a>`);
+            }
+            
+            return `<div class="breadcrumb">${breadcrumbs.join(' › ')}</div>`;
+        }
+        
+        // Render person page
+        async function renderPerson(id) {
+            if (!id) {
+                renderRoot();
+                return;
+            }
+            
+            try {
+                const person = await fetchPerson(id);
+                const children = await fetchChildren(id);
+                
+                let html = buildBreadcrumb(id);
+                
+                if (person.parent_id) {
+                    html += `<a href="#${person.parent_id}" class="back-link">← Back to ${person.parent_id}</a>`;
+                } else {
+                    html += `<a href="#" class="back-link">← Back to Root</a>`;
+                }
+                
+                html += `
+                    <div class="person-card">
+                        <div class="person-header">
+                            <h2>${person.name}</h2>
+                            <div class="person-id">
+                                ID: ${person.id}
+                                ${person.secondary_id ? ` | ${person.secondary_id}` : ''}
+                                | Source: ${person.source_file}
+                            </div>
+                        </div>
+                        <div class="person-text">${escapeHtml(person.text)}</div>
+                `;
+                
+                if (children.length > 0) {
+                    html += `
+                        <div class="children">
+                            <h3>Children (${children.length})</h3>
+                            <ul class="child-list">
+                    `;
+                    
+                    children.forEach(child => {
+                        html += `
+                            <li>
+                                <a href="#${child.id}">
+                                    ${child.name}
+                                    <span class="child-id">${child.id}</span>
+                                </a>
+                            </li>
+                        `;
+                    });
+                    
+                    html += `
+                            </ul>
+                        </div>
+                    `;
+                } else {
+                    html += `
+                        <div class="children">
+                            <p class="no-children">No children recorded</p>
+                        </div>
+                    `;
+                }
+                
+                html += `</div>`;
+                
+                app.innerHTML = html;
+            } catch (error) {
+                app.innerHTML = `<div class="person-card"><h2>Error loading person</h2><p>${error.message}</p></div>`;
+            }
+        }
+        
+        // Render root (Jeffrey's children)
+        async function renderRoot() {
+            try {
+                const response = await fetch(`${API_URL}/root`);
+                const children = await response.json();
+                
+                let html = `
+                    <div class="breadcrumb">Root</div>
+                    <div class="person-card">
+                        <div class="person-header">
+                            <h2>Jeffrey Ferris</h2>
+                            <div class="person-id">Patriarch (c.1610-1666)</div>
+                        </div>
+                        <div class="children">
+                            <h3>Children (${children.length})</h3>
+                            <ul class="child-list">
+                `;
+                
+                children.forEach(child => {
+                    html += `
+                        <li>
+                            <a href="#${child.id}">
+                                ${child.name}
+                                <span class="child-id">${child.id}</span>
+                            </a>
+                        </li>
+                    `;
+                });
+                
+                html += `
+                            </ul>
+                        </div>
+                    </div>
+                `;
+                
+                app.innerHTML = html;
+            } catch (error) {
+                app.innerHTML = `<div class="person-card"><h2>Error loading data</h2><p>${error.message}</p></div>`;
+            }
+        }
+        
+        // HTML escape
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        
+        // Handle hash changes
+        window.addEventListener('hashchange', () => {
+            const id = getCurrentPersonId();
+            renderPerson(id);
+        });
+        
+        // Initial load
+        const initialId = getCurrentPersonId();
+        renderPerson(initialId);
+    </script>
+</body>
+</html>
