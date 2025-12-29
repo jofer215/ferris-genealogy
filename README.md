@@ -1,4 +1,4 @@
-# Ferris Family Genealogy Database
+# Ferris Family Genealogy - Single-Page App
 
 ## Credit
 
@@ -11,87 +11,41 @@ The original site has been archived at: https://sites.google.com/view/ferris-tre
 
 **All credit for this genealogical research goes to James G. Ferris.** This database is simply a reorganization of his work into a browsable format.
 
-## Contents
+## What's This?
 
-- **ferris_genealogy.db** - SQLite database with 56,322 entries
-- **index.html** - Web interface for browsing
-- **server.py** - Flask API server
-- **parse_genealogy.py** - Parser (for reference/rebuilding)
+A single-page web application containing 56,211 genealogy entries.
 
-## Database Structure
+**Just 2 files:**
+- `index.html` - The web interface
+- `data.json` - All 56,211 people (22.5MB)
 
-```sql
-CREATE TABLE people (
-    id TEXT PRIMARY KEY,              -- Hierarchical: '3.1.1.2.5'
-    secondary_id TEXT,                -- AFN or other IDs
-    name TEXT NOT NULL,               -- Full name as written
-    text TEXT,                        -- Complete biographical entry
-    parent_id TEXT,                   -- Parent's ID
-    source_file TEXT NOT NULL         -- Source PDF
-);
+## Deploy to GitHub Pages
+
+1. Create new repo at https://github.com/new
+2. Upload both files (index.html + data.json)
+3. Settings → Pages → Enable from main branch
+4. Done! Your site will be live at: `https://yourusername.github.io/reponame/`
+
+## Features
+
+- Browse by clicking through descendants
+- Search by name (top of page)
+- Breadcrumb navigation
+- No server needed - runs entirely in browser
+- Works on any static hosting
+
+## Local Testing
+
+```bash
+python3 -m http.server 8000
 ```
+Open http://localhost:8000
 
-## Quick Start
+## Alternative Hosts
 
-1. Install dependencies:
-   ```bash
-   pip install flask flask-cors
-   ```
+- **Netlify**: Drag folder onto netlify.com
+- **Cloudflare Pages**: Upload to pages.cloudflare.com
+- **Vercel**: `vercel` command
+- **GitHub Pages**: (instructions above)
 
-2. Run the server:
-   ```bash
-   python3 server.py
-   ```
-
-3. Open browser to: http://localhost:5000
-
-## Database Stats
-
-Total Entries: 56,322
-
-By Source File:
-- Joseph (3): 17,252 entries
-- John (1): 12,459 entries  
-- Peter (2): 10,966 entries
-- James (5): 10,156 entries
-- Mary (4): 5,460 entries
-- Jeffrey (root): 2 entries
-
-## Jeffrey's Five Children
-
-1. John Ferris
-2. Peter Ferris
-3. Joseph Ferris
-4. Mary Ferris
-5. James Ferris
-
-## Usage
-
-### Browse by clicking through descendants
-- Start at root (Jeffrey's children)
-- Click any person to view details
-- Children are listed at bottom
-- Breadcrumb trail shows path
-
-### Direct queries (Python)
-```python
-import sqlite3
-conn = sqlite3.connect('ferris_genealogy.db')
-cursor = conn.cursor()
-
-# Get person by ID
-cursor.execute("SELECT * FROM people WHERE id = '3.1.1'")
-
-# Get all children
-cursor.execute("SELECT * FROM people WHERE parent_id = '3.1'")
-
-# Search by name
-cursor.execute("SELECT * FROM people WHERE name LIKE '%FERRIS%'")
-```
-
-## Notes
-
-- Data preserved as-is from original PDFs
-- Contains uncertainties, conflicts, and speculation noted by researcher
-- Read-only database - browse, don't edit
-- See original PDFs for complete context
+All are free.

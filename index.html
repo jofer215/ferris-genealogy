@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ferris Genealogy Browser</title>
+    <title>Ferris Family Genealogy</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         
@@ -30,6 +30,28 @@
         header h1 {
             font-size: 28px;
             font-weight: normal;
+            margin-bottom: 5px;
+        }
+        
+        header p {
+            font-size: 14px;
+            color: #ecf0f1;
+        }
+        
+        header a {
+            color: #3498db;
+            text-decoration: none;
+        }
+        
+        header a:hover {
+            text-decoration: underline;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 50px;
+            font-size: 18px;
+            color: #7f8c8d;
         }
         
         .breadcrumb {
@@ -43,6 +65,7 @@
             color: #3498db;
             text-decoration: none;
             margin-right: 5px;
+            cursor: pointer;
         }
         
         .breadcrumb a:hover {
@@ -106,6 +129,7 @@
             background: #f8f9fa;
             border-left: 3px solid #3498db;
             transition: all 0.2s;
+            cursor: pointer;
         }
         
         .child-list li:hover {
@@ -113,16 +137,27 @@
             border-left-width: 5px;
         }
         
-        .child-list a {
-            text-decoration: none;
-            color: #2c3e50;
-            display: block;
-        }
-        
         .child-id {
             color: #7f8c8d;
             font-size: 12px;
             margin-left: 10px;
+        }
+        
+        .no-children {
+            color: #7f8c8d;
+            font-style: italic;
+        }
+        
+        .back-link {
+            display: inline-block;
+            margin-bottom: 15px;
+            color: #3498db;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        
+        .back-link:hover {
+            text-decoration: underline;
         }
         
         .search-box {
@@ -145,20 +180,10 @@
             border-color: #3498db;
         }
         
-        .no-children {
-            color: #7f8c8d;
-            font-style: italic;
-        }
-        
-        .back-link {
-            display: inline-block;
-            margin-bottom: 15px;
-            color: #3498db;
-            text-decoration: none;
-        }
-        
-        .back-link:hover {
-            text-decoration: underline;
+        .search-results {
+            max-height: 400px;
+            overflow-y: auto;
+            margin-top: 10px;
         }
     </style>
 </head>
@@ -166,183 +191,222 @@
     <header>
         <div class="container">
             <h1>Ferris Family Genealogy</h1>
-            <p>Research compiled by James G. Ferris</p>
+            <p>Research compiled by James G. Ferris | <a href="https://sites.google.com/view/ferris-tree/" target="_blank">Original site archive</a></p>
         </div>
     </header>
     
     <div class="container">
-        <div id="app"></div>
+        <div class="search-box">
+            <input type="text" id="searchInput" placeholder="Search by name..." />
+            <div id="searchResults" class="search-results"></div>
+        </div>
+        <div id="app">
+            <div class="loading">Loading genealogy data...</div>
+        </div>
     </div>
     
     <script>
-        const API_URL = '/api';
+        let genealogyData = null;
         const app = document.getElementById('app');
+        const searchInput = document.getElementById('searchInput');
+        const searchResults = document.getElementById('searchResults');
         
-        // Get person ID from URL hash
+        // Load data
+        fetch('data.json')
+            .then(response => response.json())
+            .then(data => {
+                genealogyData = data;
+                initializeApp();
+            })
+            .catch(error => {
+                app.innerHTML = '<div class="person-card"><h2>Error loading data</h2><p>' + error.message + '</p></div>';
+            });
+        
+        function initializeApp() {
+            // Handle hash navigation
+            window.addEventListener('hashchange', render);
+            
+            // Setup search
+            let searchTimeout;
+            searchInput.addEventListener('input', (e) => {
+                clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(() => performSearch(e.target.value), 300);
+            });
+            
+            // Initial render
+            render();
+        }
+        
+        function performSearch(query) {
+            if (!query || query.length < 2) {
+                searchResults.innerHTML = '';
+                return;
+            }
+            
+            const results = [];
+            const lowerQuery = query.toLowerCase();
+            
+            for (const [id, person] of Object.entries(genealogyData)) {
+                if (person.name.toLowerCase().includes(lowerQuery)) {
+                    results.push(person);
+                    if (results.length >= 50) break; // Limit results
+                }
+            }
+            
+            if (results.length === 0) {
+                searchResults.innerHTML = '<div class="no-children" style="padding: 10px;">No results found</div>';
+            } else {
+                let html = '<ul class="child-list">';
+                results.forEach(person => {
+                    html += `
+                        <li onclick="goToPerson('${person.id}')">
+                            ${escapeHtml(person.name)}
+                            <span class="child-id">${person.id}</span>
+                        </li>
+                    `;
+                });
+                html += '</ul>';
+                searchResults.innerHTML = html;
+            }
+        }
+        
         function getCurrentPersonId() {
             const hash = window.location.hash;
             return hash ? hash.substring(1) : null;
         }
         
-        // Navigate to person
         function goToPerson(id) {
+            searchInput.value = '';
+            searchResults.innerHTML = '';
             window.location.hash = id;
         }
         
-        // Fetch person data
-        async function fetchPerson(id) {
-            const response = await fetch(`${API_URL}/person/${id}`);
-            return response.json();
-        }
-        
-        // Fetch children
-        async function fetchChildren(id) {
-            const response = await fetch(`${API_URL}/children/${id}`);
-            return response.json();
-        }
-        
-        // Build breadcrumb trail
         function buildBreadcrumb(id) {
-            if (!id) return '';
+            if (!id) return '<div class="breadcrumb"><a onclick="goToPerson('')">Root</a></div>';
             
             const parts = id.split('.');
-            let breadcrumbs = ['<a href="#">Root</a>'];
+            let breadcrumbs = ['<a onclick="goToPerson('')">Root</a>'];
             
             for (let i = 0; i < parts.length; i++) {
                 const partId = parts.slice(0, i + 1).join('.');
-                breadcrumbs.push(`<a href="#${partId}">${partId}</a>`);
+                breadcrumbs.push(`<a onclick="goToPerson('${partId}')">${partId}</a>`);
             }
             
             return `<div class="breadcrumb">${breadcrumbs.join(' › ')}</div>`;
         }
         
-        // Render person page
-        async function renderPerson(id) {
-            if (!id) {
-                renderRoot();
-                return;
-            }
+        function render() {
+            const personId = getCurrentPersonId();
             
-            try {
-                const person = await fetchPerson(id);
-                const children = await fetchChildren(id);
-                
-                let html = buildBreadcrumb(id);
-                
-                if (person.parent_id) {
-                    html += `<a href="#${person.parent_id}" class="back-link">← Back to ${person.parent_id}</a>`;
-                } else {
-                    html += `<a href="#" class="back-link">← Back to Root</a>`;
-                }
-                
-                html += `
-                    <div class="person-card">
-                        <div class="person-header">
-                            <h2>${person.name}</h2>
-                            <div class="person-id">
-                                ID: ${person.id}
-                                ${person.secondary_id ? ` | ${person.secondary_id}` : ''}
-                                | Source: ${person.source_file}
-                            </div>
-                        </div>
-                        <div class="person-text">${escapeHtml(person.text)}</div>
-                `;
-                
-                if (children.length > 0) {
-                    html += `
-                        <div class="children">
-                            <h3>Children (${children.length})</h3>
-                            <ul class="child-list">
-                    `;
-                    
-                    children.forEach(child => {
-                        html += `
-                            <li>
-                                <a href="#${child.id}">
-                                    ${child.name}
-                                    <span class="child-id">${child.id}</span>
-                                </a>
-                            </li>
-                        `;
-                    });
-                    
-                    html += `
-                            </ul>
-                        </div>
-                    `;
-                } else {
-                    html += `
-                        <div class="children">
-                            <p class="no-children">No children recorded</p>
-                        </div>
-                    `;
-                }
-                
-                html += `</div>`;
-                
-                app.innerHTML = html;
-            } catch (error) {
-                app.innerHTML = `<div class="person-card"><h2>Error loading person</h2><p>${error.message}</p></div>`;
+            if (!personId) {
+                renderRoot();
+            } else {
+                renderPerson(personId);
             }
         }
         
-        // Render root (Jeffrey's children)
-        async function renderRoot() {
-            try {
-                const response = await fetch(`${API_URL}/root`);
-                const children = await response.json();
-                
-                let html = `
-                    <div class="breadcrumb">Root</div>
-                    <div class="person-card">
-                        <div class="person-header">
-                            <h2>Jeffrey Ferris</h2>
-                            <div class="person-id">Patriarch (c.1610-1666)</div>
+        function renderRoot() {
+            const rootChildren = ['1', '2', '3', '4', '5']
+                .map(id => genealogyData[id])
+                .filter(p => p);
+            
+            let html = buildBreadcrumb(null);
+            html += `
+                <div class="person-card">
+                    <div class="person-header">
+                        <h2>Jeffrey Ferris</h2>
+                        <div class="person-id">Patriarch (c.1610-1666)</div>
+                    </div>
+                    <div class="children">
+                        <h3>Children (${rootChildren.length})</h3>
+                        <ul class="child-list">
+            `;
+            
+            rootChildren.forEach(child => {
+                html += `
+                    <li onclick="goToPerson('${child.id}')">
+                        ${escapeHtml(child.name)}
+                        <span class="child-id">${child.id}</span>
+                    </li>
+                `;
+            });
+            
+            html += `
+                        </ul>
+                    </div>
+                </div>
+            `;
+            
+            app.innerHTML = html;
+        }
+        
+        function renderPerson(personId) {
+            const person = genealogyData[personId];
+            
+            if (!person) {
+                app.innerHTML = '<div class="person-card"><h2>Person not found</h2></div>';
+                return;
+            }
+            
+            let html = buildBreadcrumb(personId);
+            
+            if (person.parent_id) {
+                html += `<a class="back-link" onclick="goToPerson('${person.parent_id}')">← Back to ${person.parent_id}</a>`;
+            } else {
+                html += `<a class="back-link" onclick="goToPerson('')">← Back to Root</a>`;
+            }
+            
+            html += `
+                <div class="person-card">
+                    <div class="person-header">
+                        <h2>${escapeHtml(person.name)}</h2>
+                        <div class="person-id">
+                            ID: ${person.id}
+                            ${person.secondary_id ? ' | ' + escapeHtml(person.secondary_id) : ''}
+                            | Source: ${person.source_file}
                         </div>
-                        <div class="children">
-                            <h3>Children (${children.length})</h3>
-                            <ul class="child-list">
+                    </div>
+                    <div class="person-text">${escapeHtml(person.text)}</div>
+            `;
+            
+            if (person.children && person.children.length > 0) {
+                html += `
+                    <div class="children">
+                        <h3>Children (${person.children.length})</h3>
+                        <ul class="child-list">
                 `;
                 
-                children.forEach(child => {
+                person.children.forEach(child => {
                     html += `
-                        <li>
-                            <a href="#${child.id}">
-                                ${child.name}
-                                <span class="child-id">${child.id}</span>
-                            </a>
+                        <li onclick="goToPerson('${child.id}')">
+                            ${escapeHtml(child.name)}
+                            <span class="child-id">${child.id}</span>
                         </li>
                     `;
                 });
                 
                 html += `
-                            </ul>
-                        </div>
+                        </ul>
                     </div>
                 `;
-                
-                app.innerHTML = html;
-            } catch (error) {
-                app.innerHTML = `<div class="person-card"><h2>Error loading data</h2><p>${error.message}</p></div>`;
+            } else {
+                html += `
+                    <div class="children">
+                        <p class="no-children">No children recorded</p>
+                    </div>
+                `;
             }
+            
+            html += '</div>';
+            app.innerHTML = html;
         }
         
-        // HTML escape
         function escapeHtml(text) {
+            if (!text) return '';
             const div = document.createElement('div');
             div.textContent = text;
             return div.innerHTML;
         }
-        
-        // Handle hash changes
-        window.addEventListener('hashchange', () => {
-            const id = getCurrentPersonId();
-            renderPerson(id);
-        });
-        
-        // Initial load
-        const initialId = getCurrentPersonId();
-        renderPerson(initialId);
     </script>
 </body>
 </html>
