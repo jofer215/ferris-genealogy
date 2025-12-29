@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ferris Family Genealogy - Test</title>
+</head>
+<body>
+    <h1>Testing Data Load</h1>
+    <div id="status">Loading...</div>
+    
+    <script>
+        const status = document.getElementById('status');
+        
+        console.log('Script started');
+        status.textContent = 'Fetching data...';
+        
+        fetch('./data.json')
+            .then(function(response) {
+                console.log('Response:', response.status);
+                status.textContent = 'Got response: ' + response.status;
+                return response.json();
+            })
+            .then(function(data) {
+                console.log('Data loaded');
+                const count = Object.keys(data).length;
+                status.textContent = 'SUCCESS! Loaded ' + count + ' people';
+            })
+            .catch(function(error) {
+                console.error('Error:', error);
+                status.textContent = 'ERROR: ' + error.message;
+            });
+    </script>
+</body>
+</html>
