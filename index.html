@@ -54,33 +54,6 @@
             color: #7f8c8d;
         }
         
-        .loading-spinner {
-            display: inline-block;
-            width: 50px;
-            height: 50px;
-            border: 5px solid #ecf0f1;
-            border-top: 5px solid #3498db;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin-bottom: 20px;
-        }
-        
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        
-        .loading-text {
-            font-size: 16px;
-            color: #7f8c8d;
-        }
-        
-        .loading-subtext {
-            font-size: 14px;
-            color: #95a5a6;
-            margin-top: 10px;
-        }
-        
         .breadcrumb {
             background: white;
             padding: 15px;
@@ -189,15 +162,15 @@
         
         .search-box {
             background: white;
-            padding: 15px;
+            padding: 20px;
             margin-bottom: 20px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
         
         .search-box input {
             width: 100%;
-            padding: 10px;
-            font-size: 15px;
+            padding: 12px;
+            font-size: 16px;
             border: 2px solid #ecf0f1;
             border-radius: 4px;
         }
@@ -208,14 +181,9 @@
         }
         
         .search-results {
-            max-height: 300px;
+            max-height: 400px;
             overflow-y: auto;
             margin-top: 10px;
-            display: none;
-        }
-        
-        .search-results.active {
-            display: block;
         }
     </style>
 </head>
@@ -233,11 +201,7 @@
             <div id="searchResults" class="search-results"></div>
         </div>
         <div id="app">
-            <div class="loading">
-                <div class="loading-spinner"></div>
-                <div class="loading-text">Loading genealogy data...</div>
-                <div class="loading-subtext">Downloading 56,211 people</div>
-            </div>
+            <div class="loading">Loading genealogy data...</div>
         </div>
     </div>
     
@@ -247,45 +211,15 @@
         const searchInput = document.getElementById('searchInput');
         const searchResults = document.getElementById('searchResults');
         
-        // Load data - using uncompressed JSON for reliability
-        app.innerHTML = `
-            <div class="loading">
-                <div class="loading-spinner"></div>
-                <div class="loading-text">Loading genealogy data...</div>
-                <div class="loading-subtext">Downloading 56,211 people (may take 10-30 seconds on slow connections)</div>
-            </div>
-        `;
-        
-        console.log('Starting data load...');
-        
-        fetch('./data.json')
-            .then(response => {
-                console.log('Fetch response:', response.status, response.statusText);
-                if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-                }
-                return response.json();
-            })
+        // Load data
+        fetch('data.json')
+            .then(response => response.json())
             .then(data => {
-                console.log('Data loaded, entries:', Object.keys(data).length);
                 genealogyData = data;
                 initializeApp();
             })
             .catch(error => {
-                console.error('Load error:', error);
-                app.innerHTML = `
-                    <div class="person-card">
-                        <h2>Failed to Load Data</h2>
-                        <p><strong>Error:</strong> ${error.message}</p>
-                        <p><strong>Troubleshooting:</strong></p>
-                        <ul style="margin-left: 20px; margin-top: 10px;">
-                            <li>Make sure data.json is in your repository</li>
-                            <li>Try visiting <a href="./data.json">./data.json</a> directly</li>
-                            <li>Check browser console (F12) for details</li>
-                            <li>Wait a few minutes for GitHub Pages to deploy</li>
-                        </ul>
-                    </div>
-                `;
+                app.innerHTML = '<div class="person-card"><h2>Error loading data</h2><p>' + error.message + '</p></div>';
             });
         
         function initializeApp() {
@@ -305,7 +239,6 @@
         
         function performSearch(query) {
             if (!query || query.length < 2) {
-                searchResults.classList.remove('active');
                 searchResults.innerHTML = '';
                 return;
             }
@@ -319,8 +252,6 @@
                     if (results.length >= 50) break; // Limit results
                 }
             }
-            
-            searchResults.classList.add('active');
             
             if (results.length === 0) {
                 searchResults.innerHTML = '<div class="no-children" style="padding: 10px;">No results found</div>';
@@ -346,7 +277,6 @@
         
         function goToPerson(id) {
             searchInput.value = '';
-            searchResults.classList.remove('active');
             searchResults.innerHTML = '';
             window.location.hash = id;
         }
