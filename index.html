@@ -162,15 +162,15 @@
         
         .search-box {
             background: white;
-            padding: 20px;
+            padding: 15px;
             margin-bottom: 20px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
         
         .search-box input {
             width: 100%;
-            padding: 12px;
-            font-size: 16px;
+            padding: 10px;
+            font-size: 15px;
             border: 2px solid #ecf0f1;
             border-radius: 4px;
         }
@@ -181,9 +181,14 @@
         }
         
         .search-results {
-            max-height: 400px;
+            max-height: 300px;
             overflow-y: auto;
             margin-top: 10px;
+            display: none;
+        }
+        
+        .search-results.active {
+            display: block;
         }
     </style>
 </head>
@@ -239,6 +244,7 @@
         
         function performSearch(query) {
             if (!query || query.length < 2) {
+                searchResults.classList.remove('active');
                 searchResults.innerHTML = '';
                 return;
             }
@@ -252,6 +258,8 @@
                     if (results.length >= 50) break; // Limit results
                 }
             }
+            
+            searchResults.classList.add('active');
             
             if (results.length === 0) {
                 searchResults.innerHTML = '<div class="no-children" style="padding: 10px;">No results found</div>';
@@ -277,6 +285,7 @@
         
         function goToPerson(id) {
             searchInput.value = '';
+            searchResults.classList.remove('active');
             searchResults.innerHTML = '';
             window.location.hash = id;
         }
